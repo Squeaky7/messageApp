@@ -3,7 +3,7 @@ import json
 import getpass
 
 # Set File Path
-usrlist_path = os.path.join("usr_list.jsonl")
+usrlist_path = "usr_list.jsonl"
 
 # Create New Account
 def create_account():
@@ -11,7 +11,7 @@ def create_account():
     
     try:
         with open(usrlist_path, 'r') as file:
-            ids = json.load(file)
+            ids = [json.loads(line.strip()) for line in file if line.strip()]
 
         # Make IDs List
         id_list = []
@@ -62,63 +62,59 @@ def create_account():
     except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
         print(f"Error was happened: {e}")
 
-def login_process(usrlist, usrname):
-
+def login_process(usrname):
     try:
-        with open(usrlist, 'r', encoding= 'utf-8') as file:
-            usrs = []
-            for line in file:
-                try:
-                    usrs.append(json.loads(line.strip()))
-                except json.JSONDecodeError:
-                    print(f"Error decoding line: {line.strip()}")
+        # JSON Lines ファイルを読み取る
+        with open(usrlist_path, 'r', encoding='utf-8') as file:
+            usrs = [json.loads(line.strip()) for line in file if line.strip()]  # JSONLの各行をパース
 
+        # 指定されたユーザー名を検索
         for item in usrs:
-            if item.get("name") == usrname:
+            if item.get("name") == usrname:  # 一致するユーザーが見つかった場合
                 passw = item.get("password")
 
-                passbool = True
-                while passbool:
+                # パスワード認証プロセス
+                while True:
                     enter_pass = getpass.getpass("Enter password: ")
                     if enter_pass == passw:
-                        passbool = False
-                        return "Logged in correctly."
+                        print("Logged in correctly.")
                     else:
-                        print("Incorrect password.")
-                return
+                        print("Incorrect password. Try again.")
 
-            print(f"Account name \"{usrname}\" not found.\nDo you want create new account[y/N]: ")
-            new_account = input().upper()
-            
-            if new_account == "Y":
-                print("Create new account")
-                create_account()
-                return "New account created"
-            else:
-                print("Exiting program.")
-                return "Login process exited"
+        # ユーザーが見つからない場合
+        print(f"Account name \"{usrname}\" not found.\nDo you want to create a new account? [y/N]: ")
+        new_account = input().strip().upper()
+        
+        if new_account == "Y":
+            print("Creating a new account...")
+            create_account()  # 新しいアカウントを作成
+            return "New account created"
+        else:
+            print("Exiting program.")
+            return "Login process exited"
 
     except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
-        print(f"Error was happened: {e}")
+        print(f"Error occurred: {e}")
         return "An error occurred"
 
 
-def main():
-    while True:
-        print("1. Login\n2. Exit\n")
-        select_menu = input("Select an option: ").strip()
 
-        if select_menu == "1":
-            usrname = input("Enter your username: ").strip()
-            password = login_process(usrlist_path, usrname)
-            print(password)
+# def main():
+#     while True:
+#         print("1. Login\n2. Exit\n")
+#         select_menu = input("Select an option: ").strip()
 
-        elif select_menu == "2":
-            print("Exiting program.")
-            break
+#         if select_menu == "1":
+#             usrname = input("Enter your username: ").strip()
+#             password = login_process(usrlist_path, usrname)
+#             print(password)
 
-        else:
-            print("Invalid option. Please try again.")
+#         elif select_menu == "2":
+#             print("Exiting program.")
+#             break
 
-main()
+#         else:
+#             print("Invalid option. Please try again.")
+
+# main()
 
